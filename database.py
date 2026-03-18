@@ -13,6 +13,7 @@ load_dotenv()
 try:
     import psycopg2
     import psycopg2.extras
+    import psycopg2.errors
     POSTGRES_AVAILABLE = True
 except ImportError:
     POSTGRES_AVAILABLE = False
@@ -262,7 +263,9 @@ class DatabaseManager:
                     INSERT INTO assertions (subject_id, subject_type, source_text, confidence, status, document_name, section_ref, source_authority)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id
                 """, (subject_id, subject_type, source_text, confidence, status, document_name, section_ref, source_authority))
-                assertion_id = cursor.fetchone()[0]
+                # With RealDictCursor, we access by name
+                row = cursor.fetchone()
+                assertion_id = row['id']
             else:
                 cursor.execute("""
                     INSERT INTO assertions (subject_id, subject_type, source_text, confidence, status, document_name, section_ref, source_authority)
