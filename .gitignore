@@ -1,0 +1,36 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables
+.env
+
+# Output files
+*.json
+!package.json
+
+# Logs
+tunnel_log.txt
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Database
+graph.db
+graph.db-shm
+graph.db-wal
+
+# Uploads
+uploads/
+tunnel.log
+test_prompt.py

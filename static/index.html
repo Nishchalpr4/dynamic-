@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zone 1 — Entity Graph Explorer</title>
+    <meta name="description"
+        content="Interactive Zone 1 Entity Zone knowledge graph builder for investment analysis. Paste text chunks and watch the graph grow.">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- D3.js v7 -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <!-- ─── HEADER ─── -->
+    <header id="app-header">
+        <div class="header-left">
+            <div class="logo-mark"></div>
+            <div>
+                <h1>Entity Graph Explorer</h1>
+                <p class="subtitle">Zone 1 · Investment Analysis Knowledge Graph</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="stat-pill" id="stat-entities">
+                <span class="stat-label">Entities</span>
+                <span class="stat-value" id="entity-count">0</span>
+            </div>
+            <div class="stat-pill" id="stat-relations">
+                <span class="stat-label">Relations</span>
+                <span class="stat-value" id="relation-count">0</span>
+            </div>
+            <button id="btn-reset" class="btn-ghost" title="Reset graph">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 2v5h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M3.05 10A6 6 0 1 0 4.5 4.5L2 7" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Reset
+            </button>
+        </div>
+    </header>
+
+    <!-- ─── MAIN LAYOUT ─── -->
+    <main id="app-main">
+        <!-- LEFT PANEL: Input -->
+        <aside id="input-panel">
+            <nav class="panel-tabs">
+                <button class="tab-btn active" data-tab="extract">Quick Extract</button>
+                <button class="tab-btn" data-tab="ingest">Ingestion Pipeline</button>
+            </nav>
+
+            <!-- TAB: Quick Extract -->
+            <div id="tab-extract" class="tab-content active">
+                <div class="panel-header">
+                    <h2>Text Input</h2>
+                    <span class="chunk-badge" id="chunk-count">0 chunks processed</span>
+                </div>
+
+                <div class="input-grid" style="margin-bottom: 12px;">
+                    <div class="input-group">
+                        <label for="doc-company">Company</label>
+                        <input type="text" id="doc-company" placeholder="e.g., Nike Inc.">
+                    </div>
+                    <div class="input-group">
+                        <label for="doc-ticker">Ticker</label>
+                        <input type="text" id="doc-ticker" placeholder="e.g., NKE">
+                    </div>
+                    <div class="input-group">
+                        <label for="doc-year">Year</label>
+                        <input type="number" id="doc-year" value="2024">
+                    </div>
+                    <div class="input-group">
+                        <label for="doc-period">Period</label>
+                        <select id="doc-period">
+                            <option>Annual</option>
+                            <option>Q1</option>
+                            <option>Q2</option>
+                            <option>Q3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-grid" style="margin-bottom: 12px;">
+                    <div class="input-group">
+                        <label for="doc-name">Document Name</label>
+                        <input type="text" id="doc-name" placeholder="e.g., Annual Report 2024" value="User Input">
+                    </div>
+                    <div class="input-group">
+                        <label for="section-ref">Section Reference</label>
+                        <input type="text" id="section-ref" placeholder="e.g., page_12" value="chunk">
+                    </div>
+                </div>
+
+                <div class="input-group textarea-group">
+                    <label for="text-input">Paste text chunk</label>
+                    <textarea id="text-input"
+                        placeholder="Paste a section of a company document here...&#10;&#10;The system will extract structural entities (companies, business units, products, people, sites, etc.) and their relationships."></textarea>
+                </div>
+
+                <button id="btn-extract" class="btn-primary">
+                    <span class="btn-text">Extract Entities</span>
+                    <span class="btn-loading" style="display:none;">
+                        <svg class="spinner" width="18" height="18" viewBox="0 0 18 18">
+                            <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-dasharray="30 14" stroke-linecap="round" />
+                        </svg>
+                        Extracting...
+                    </span>
+                </button>
+
+                <!-- Extraction Result -->
+                <div id="extraction-result" class="result-card" style="display:none;">
+                    <h3>Extraction Result</h3>
+                    <div id="result-content"></div>
+                </div>
+
+                <!-- Extraction Log -->
+                <div id="extraction-log" class="log-section">
+                    <h3>Extraction History</h3>
+                    <div id="log-entries" class="log-entries"></div>
+                </div>
+            </div>
+
+            <!-- TAB: Ingestion Pipeline -->
+            <div id="tab-ingest" class="tab-content">
+                <div class="panel-header">
+                    <h2>Document Ingestion</h2>
+                </div>
+
+                <div class="ingestion-workflow">
+                    <div class="workflow-step">
+                        <label>1. Select/Upload PDF</label>
+                        <div class="file-upload-zone" id="file-drop-zone">
+                            <input type="file" id="pdf-upload" accept=".pdf" style="display:none;">
+                            <div class="upload-placeholder">
+                                <span>Drop PDF or click to browse</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="metadata-config" style="display:none;">
+                        <div class="workflow-step">
+                            <label>2. Configure Metadata</label>
+                            <div class="input-grid">
+                                <div class="input-group">
+                                    <label>Company</label>
+                                    <input type="text" id="meta-company" placeholder="e.g. Nike Inc.">
+                                </div>
+                                <div class="input-group">
+                                    <label>Ticker</label>
+                                    <input type="text" id="meta-ticker" placeholder="e.g. NKE">
+                                </div>
+                                <div class="input-group">
+                                    <label>Year</label>
+                                    <input type="number" id="meta-year" value="2024">
+                                </div>
+                                <div class="input-group">
+                                    <label>Period</label>
+                                    <select id="meta-period">
+                                        <option>Annual</option>
+                                        <option>Q1</option>
+                                        <option>Q2</option>
+                                        <option>Q3</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="btn-process-doc" class="btn-primary">
+                            <span class="btn-text">Process & Generate Golden Chunks</span>
+                            <span class="btn-loading" style="display:none;">Extracting...</span>
+                        </button>
+                    </div>
+
+                    <div id="ingestion-status" class="status-box" style="display:none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                        <span id="ingestion-status-text">Processing...</span>
+                    </div>
+
+                    <div id="golden-chunks-list" class="chunks-list">
+                        <!-- Chunks will appear here -->
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- RIGHT: Graph Visualization -->
+        <section id="graph-panel">
+            <div id="graph-container">
+                <svg id="graph-svg"></svg>
+            </div>
+
+            <!-- Legend -->
+            <div id="graph-legend"></div>
+
+            <!-- Node tooltip -->
+            <div id="node-tooltip" class="tooltip" style="display:none;"></div>
+        </section>
+
+        <!-- JSON Output Panel (right of graph) -->
+        <aside id="json-panel" class="json-panel">
+            <div class="panel-header">
+                <h2>Extraction JSON</h2>
+            </div>
+            <pre id="json-output"></pre>
+        </aside>
+
+        <!-- FAR RIGHT: Detail Sidebar -->
+        <aside id="detail-panel" class="detail-panel" style="display:none;">
+            <div class="panel-header">
+                <h2>Details</h2>
+                <button id="btn-close-details" class="btn-ghost" style="padding: 2px 6px;">✕</button>
+            </div>
+            <div id="detail-content" class="detail-content">
+                <div class="empty-state">
+                    <p>Click a node or edge to view details and evidence.</p>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- ─── STATUS BAR ─── -->
+    <footer id="status-bar">
+        <span id="status-text">Ready</span>
+        <span id="llm-info"></span>
+    </footer>
+
+    <script src="/static/graph.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
