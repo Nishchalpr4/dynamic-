@@ -116,7 +116,7 @@ function renderLegend(colors = ENTITY_TYPE_COLORS) {
 // ── Fetch Rules ───────────────────────────────────────────────────
 async function fetchOntology() {
     try {
-        const res = await fetch("/api/ontology?v=5");
+        const res = await fetch("/api/ontology?v=6");
         if (!res.ok) {
             console.warn("Ontology fetch failed, using defaults");
             return;
@@ -137,7 +137,7 @@ async function fetchOntology() {
 // ── Fetch Initial Data ────────────────────────────────────────────────
 async function fetchGraph() {
     try {
-        const res = await fetch("/api/graph?v=5");
+        const res = await fetch("/api/graph?v=6");
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         const text = await res.text();
         if (!text) throw new Error("Empty response from server");

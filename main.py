@@ -178,5 +178,18 @@ async def get_ontology():
 async def serve_index():
     return FileResponse("static/index.html")
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print(f"GLOBAL ERROR: {exc}")
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "message": str(exc)},
+    )
+
 # Mount static files AFTER specific routes
 app.mount("/static", StaticFiles(directory="static"), name="static")

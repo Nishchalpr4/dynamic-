@@ -35,13 +35,31 @@ class DatabaseManager:
 
         self._init_db()
 
+        # ── CONNECTION POOLING (Critical for Render/Neon Free Tier) ──
+        # SimpleConnectionPool reuses existing connections to avoid hitting limits.
+        try:
+            from psycopg2 import pool
+            self.pool = pool.SimpleConnectionPool(
+                1, 20, # min, max connections
+                dsn=self.db_url,
+                sslmode='require' # Required for Neon
+            )
+            logger.info("Neon Postgres Connection Pool initialized (1-20 connections).")
+        except Exception as e:
+            logger.error(f"Failed to initialize Connection Pool: {e}")
+            raise
+
     def _get_connection(self):
-        """Creates a fresh connection to the Neon Postgres instance."""
-        return psycopg2.connect(self.db_url)
+        """Retrieves a connection from the pool."""
+        return self.pool.getconn()
 
     def _get_cursor(self, conn):
-        """Standardizes on DictCursor for robust row access (row['name'])."""
+        """Standardizes on DictCursor for robust row access."""
         return conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+    def _release_connection(self, conn):
+        """Returns a connection back to the pool."""
+        self.pool.putconn(conn)
 
     def _init_db(self):
         """Initializes the Neon Postgres schema."""
@@ -148,7 +166,7 @@ class DatabaseManager:
                 logger.info("Ontology is empty. Auto-seeding from base_ontology.json...")
                 self.seed_ontology()
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def clear_graph_data(self):
         """
@@ -165,7 +183,7 @@ class DatabaseManager:
             conn.commit()
             logger.warning("Graph data tables cleared. (Ontology and Discoveries preserved)")
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def danger_full_wipe(self):
         """
@@ -185,7 +203,7 @@ class DatabaseManager:
             conn.commit()
             logger.warning("All Neon Postgres tables dropped (FULL WIPE).")
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def get_ontology(self):
         """FETCH RULES: Returns the current AI configuration (types/colors/logic)."""
@@ -196,7 +214,7 @@ class DatabaseManager:
             rows = cursor.fetchall()
             return {row['key']: json.loads(row['data']) for row in rows}
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def update_ontology(self, key: str, data: list | dict, merge: bool = False):
         """
@@ -241,7 +259,7 @@ class DatabaseManager:
             """, (key, json.dumps(final_data)))
             conn.commit()
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def upsert_entity(self, entity_id: str, name: str, entity_type: str, color: str = None, attributes: dict = None, aliases: list = None):
         """Upserts an entity into the master table."""
@@ -261,7 +279,7 @@ class DatabaseManager:
             """, (entity_id, name, entity_type, color, json.dumps(attributes or {}), json.dumps(aliases or [])))
             conn.commit()
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def add_relation(self, rel_id: str, source_id: str, target_id: str, relation: str):
         """Adds a unique relation link to Neon."""
@@ -275,7 +293,7 @@ class DatabaseManager:
             """, (rel_id, source_id, target_id, relation))
             conn.commit()
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def add_assertion(self, subject_id: str, subject_type: str, source_text: str, confidence: float, document_name: str, section_ref: str, status: str = 'PENDING', source_authority: int = 5):
         """Adds an evidence assertion and returns the auto-generated SERIAL ID."""
@@ -291,7 +309,7 @@ class DatabaseManager:
             conn.commit()
             return assertion_id
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def add_quant_metric(self, entity_id: str, metric: str, value: float, unit: str, period: str, assertion_id: int = None):
         """Adds a quantitative metric row to Neon."""
@@ -304,7 +322,7 @@ class DatabaseManager:
             """, (entity_id, metric, value, unit, period, assertion_id))
             conn.commit()
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def add_discovery(self, d):
         """Logs a newly discovered entity or relation type into its respective distinct table."""
@@ -324,7 +342,7 @@ class DatabaseManager:
                 """, (d.suggested_label, d.source_type, d.target_type, getattr(d, 'rationale', None)))
             conn.commit()
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def get_graph_data(self):
         """
@@ -384,7 +402,7 @@ class DatabaseManager:
 
             return {"nodes": nodes, "links": links}
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def seed_ontology(self, merge_with_existing: bool = True):
         """Centralized seeder: Reads base_ontology.json and writes to Neon.
