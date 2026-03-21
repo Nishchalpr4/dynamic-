@@ -171,6 +171,16 @@
             "source": "LegalEntity",
             "relation": "ANALYST_OF",
             "target": "LegalEntity"
+        },
+        {
+            "source": "LegalEntity",
+            "relation": "COMPETES_WITH",
+            "target": "Competitors"
+        },
+        {
+            "source": "LegalEntity",
+            "relation": "COMPETES_WITH",
+            "target": "LegalEntity"
         }
     ],
     "entity_colors": {
@@ -205,9 +215,11 @@
         "3. MARKET ANCHORING (STRICT): Geographies described as driving a market MUST connect to the Market entity via DRIVEN_BY, NOT to the Company.",
         "4. ANALYST ROUTING: Analyst firms MUST connect to the Market or Entity they analyze via ANALYST_OF.",
         "5. MANAGEMENT CHAIN (STRICT): Corporate leaders (CEO, COO, etc.) MUST be anchored to the Management node of the Company via Role entities. Required path: LegalEntity -> Management -> Role -> Person.",
-        "6. HIERARCHICAL INTEGRITY: Prefer 100% path connectivity (Root -> Parent -> Child) over flat lists. Shorter paths are NOT allowed if a hierarchical parent exists.",
-        "7. CONNECTIVITY: Every single node MUST have at least one incoming or outgoing relation to the main graph.",
-        "8. PRODUCT HIERARCHY: Group products under a ProductPortfolio node if clear.",
-        "9. QUANT DATA: Return numeric metrics in the quant_data list of an entity."
+        "6. HIERARCHICAL INTEGRITY: Prefer 100% path connectivity (Root -> Parent -> Child) over flat lists.",
+        "7. ZERO ISLAND POLICY (STRICT): Every single node MUST have a valid relationship path leading back to the ROOT Entity (e.g., Nike). Isolated islands are totally forbidden.",
+        "8. RELEVANCE MANDATE: If an Analyst firm (e.g. Goldman Sachs) analyzes a Market, you MUST also connect the Root Company to that Market via OPERATES_IN_MARKET to ensure relevance.",
+        "9. COMPETITOR ANCHORING: Competitors (Adidas, Puma etc.) MUST connect to the Root Company via COMPETES_WITH.",
+        "10. PRODUCT HIERARCHY: Group products under a ProductPortfolio node if clear.",
+        "11. QUANT DATA: Return numeric metrics in the quant_data list of an entity."
     ]
 }

@@ -106,19 +106,22 @@ def get_dynamic_prompt() -> str:
 ### 3. EXTRACTION RULES
 {rules_str}
 
-### 4. EXAMPLE OF HIERARCHICAL INTEGRITY (FOLLOW THIS PATTERN)
-Text: "Nike expands in Southeast Asia, with factories in Vietnam. CEO John Donahoe leads the initiative. Goldman Sachs says the global footwear market is driven by China."
+### 4. EXAMPLE OF HIERARCHICAL INTEGRITY & CONNECTIVITY (FOLLOW THIS PATTERN)
+Text: "Nike expands in Southeast Asia, with factories in Vietnam. CEO John Donahoe leads. Morgan Stanley reports on Nike. Goldman Sachs says the global market is driven by China. Nike competes with Adidas."
 Correct Extraction Logic:
 - [Nike Inc] --OPERATES_IN--> [Southeast Asia]
 - [Vietnam] --PART_OF--> [Southeast Asia] (!!! NO DIRECT LINK TO NIKE !!!)
 - [Nike Inc] --HAS_MANAGEMENT--> [Nike Management]
 - [Nike Management] --HAS_ROLE--> [CEO] --HELD_BY--> [John Donahoe]
+- [Morgan Stanley] --ANALYST_OF--> [Nike Inc] (!!! ANALYST ANCHORING !!!)
+- [Nike Inc] --OPERATES_IN_MARKET--> [Global Footwear Market] (!!! MARKET ANCHORING !!!)
 - [Goldman Sachs] --ANALYST_OF--> [Global Footwear Market]
 - [China] --DRIVEN_BY--> [Global Footwear Market] (!!! NO DIRECT LINK TO NIKE/GOLDMAN !!!)
+- [Nike Inc] --COMPETES_WITH--> [Adidas AG] (!!! COMPETITOR ANCHORING !!!)
 
 ### 5. OUTPUT FORMAT (Strict JSON)
 {{
-    "thought_process": "Analyze the text for hierarchy, trust, and missing types...",
+    "thought_process": "Analyze the text for hierarchy, connectivity, and ensuring every node has a path to ROOT...",
     "entities": [
         {{
             "temp_id": "e_root",
