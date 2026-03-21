@@ -554,8 +554,8 @@ async def call_llm(text: str, document_name: str = "User Input", section_ref: st
         content = result["choices"][0]["message"]["content"]
         finish_reason = result["choices"][0].get("finish_reason", "stop")
     except Exception as e:
-        print(f"[WARN] LLM API failed: {e}. Using mock extraction for demo...")
-        content = _mock_extraction_response(text, document_id, document_name, section_ref)
+        print(f"[ERROR] LLM API failed: {e}.")
+        raise Exception(f"API Rate Limit or Connection Error. Please wait a few minutes and try again. Details: {e}")
     
     # Strip fences
     if "```json" in content:
