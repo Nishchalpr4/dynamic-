@@ -117,36 +117,36 @@ Correct Extraction Logic:
 - [China] --DRIVEN_BY--> [Global Footwear Market] (!!! NO DIRECT LINK TO NIKE/GOLDMAN !!!)
 
 ### 5. OUTPUT FORMAT (Strict JSON)
-{
+{{
     "thought_process": "Analyze the text for hierarchy, trust, and missing types...",
     "entities": [
-        {
+        {{
             "temp_id": "e_root",
             "entity_type": "LegalEntity",
             "canonical_name": "Official Name",
-            "attributes": { "context": "Detailed explanation..." },
+            "attributes": {{ "context": "Detailed explanation..." }},
             "source_text": "...",
             "confidence": 0.95,
-            "evidence": [{"evidence_quote": "..."}]
-        }
+            "evidence": [{{ "evidence_quote": "..." }}]
+        }}
     ],
     "relations": [
-        {
+        {{
             "source_temp_id": "...",
             "target_temp_id": "...",
             "relation_type": "...",
             "source_text": "...",
             "confidence": 0.9,
-            "evidence": [{"evidence_quote": "..."}]
-        }
+            "evidence": [{{ "evidence_quote": "..." }}]
+        }}
     ],
     "quant_data": [
-        { "metric": "Revenue", "value": 2500, "unit": "Cr", "period": "2026-Q3", "subject_id": "e_root" }
+        {{ "metric": "Revenue", "value": 2500, "unit": "Cr", "period": "2026-Q3", "subject_id": "e_root" }}
     ],
     "discoveries": [],
-    "analysis_attributes": { ... },
+    "analysis_attributes": {{ ... }},
     "llm_analysis_summary": "..."
-}
+}}
 """
 
 def _mock_extraction_response(text: str, document_id: str, document_name: str, section_ref: str) -> str:
