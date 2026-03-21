@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 import traceback
+from typing import Optional
 from dotenv import load_dotenv
 
 load_dotenv()  # Load .env before other imports that read env vars
@@ -80,7 +81,7 @@ class ExtractRequest(BaseModel):
     section_ref: str = "chunk"
     source_authority: int = 5
     metadata: dict = {}
-    custom_prompt: str = None # Added for manual prompt editing in UI
+    custom_prompt: Optional[str] = None # Explicitly Optional
 
 
 # ── EXTRACTION & INGESTION ──

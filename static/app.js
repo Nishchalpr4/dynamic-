@@ -255,7 +255,12 @@ async function handleExtract(customPrompt = null) {
 
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.detail || "Extraction failed");
+            console.error("Extraction error details:", err);
+            // If it's a validation error array, extract the first message
+            const detailMsg = Array.isArray(err.detail) 
+                ? err.detail.map(d => `${d.loc.join('.')}: ${d.msg}`).join('; ')
+                : (err.detail || "Extraction failed");
+            throw new Error(detailMsg);
         }
 
         const data = await res.json();
